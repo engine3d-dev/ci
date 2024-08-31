@@ -7,6 +7,8 @@ jobs:
   deploy:
     runs-on: ubuntu-22.04
     steps:
+      - name: 📥 Install Conan ${{ inputs.conan_version }}
+        run: pip3 install conan
       - name: 📡 Add `engnie3d` repo to conan remotes
         run: conan remote add engine3d
           https://libengine3d.jfrog.io/artifactory/api/conan/engine3d-dev-conan
