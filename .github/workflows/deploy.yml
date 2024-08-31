@@ -6,7 +6,7 @@ jobs:
     steps:
       - name: 📡 Add `engnie3d` repo to conan remotes
         run: conan remote add engine3d
-          https://libengine3d.jfrog.io/ui/native/engine3d-conan
+          https://libengine3d.jfrog.io/artifactory/api/conan/engine3d-dev-conan
           
       - name: 📡 Sign into JFrog Artifactory
         if: ${{ inputs.version != '' }}
