@@ -10,7 +10,9 @@ jobs:
           PASSWORD: ${{ secrets.JFROG_ENGINE3D_TRUNKEN_ID_TOKEN }}
           JFROG_USER: ${{ secrets.JFROG_USERNAME }}
         run: conan remote login -p $PASSWORD engine3d-dev $JFROG_USER
-
+      - name: 📡 Add `libhal` repo to conan remotes
+        run: conan remote add engine3d
+          https://libengine3d.jfrog.io/ui/native/engine3d-conan
       - name: 🆙 Upload package version ${{ inputs.version }} to `engine3d` repo
         if: ${{ inputs.version != '' }}
         run: conan upload "${{ inputs.library }}/${{ inputs.version }}" --confirm -r=engine3d-dev
