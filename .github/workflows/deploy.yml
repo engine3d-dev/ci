@@ -10,15 +10,37 @@ jobs:
       - name: 📥 Install Conan ${{ inputs.conan_version }}
         run: pip3 install conan
       - name: 📡 Add `engnie3d` repo to conan remotes
-        run: conan remote add engine3d
+        run: conan remote add engine3d-dev
           https://libengine3d.jfrog.io/artifactory/api/conan/engine3d-dev-conan
-          
+      
+      - name: 📡 Create and setup default profile
+        run: conan profile detect --force
+
+      - name: 👁️‍🗨️ Show conan profile
+        run: conan profile show
+        
+      - name: 📡 Install linux default profiles
+        run: conan config install -sf profiles/x86_64/linux/ -tf profiles https://github.com/engine3d-dev/conan-config.git
+
+      - name: 📦 Create `Debug` package for ${{ inputs.profile }}
+        run: conan create . -s build_type=Debug -pr deploy.profile
+
+      - name: 📦 Create `RelWithDebInfo` package for ${{ inputs.profile }}
+        run: conan create . -s build_type=RelWithDebInfo -pr deploy.profile
+
+      - name: 📦 Create `MinSizeRel` package for ${{ inputs.profile }}
+        run: conan create . -s build_type=MinSizeRel -pr deploy.profile
+
+      - name: 📦 Create `Release` package for ${{ inputs.profile }}
+        run: conan create . -s build_type=Release -pr deploy.profile
+      
       - name: 📡 Sign into JFrog Artifactory
-        if: ${{ inputs.version != '' }}
+        # if: ${{ inputs.version != '' }}
         env:
           PASSWORD: ${{ secrets.JFROG_ENGINE3D_TRUNKEN_ID_TOKEN }}
           JFROG_USER: ${{ secrets.JFROG_USERNAME }}
         run: conan remote login -p $PASSWORD engine3d-dev $JFROG_USER
+        
       - name: 🆙 Upload package version ${{ inputs.version }} to `engine3d` repo
         if: ${{ inputs.version != '' }}
         run: conan upload "${{ inputs.library }}/${{ inputs.version }}" --confirm -r=engine3d-dev
