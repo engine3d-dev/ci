@@ -22,17 +22,19 @@ jobs:
       - name: 📡 Install linux default profiles
         run: conan config install -sf profiles/x86_64/linux/ -tf profiles https://github.com/engine3d-dev/conan-config.git
 
-      - name: 📦 Create `Debug` package
-        run: conan create . -s build_type=Debug
+      # - name: 📦 Create `Debug` package
+        # run: conan create . -s build_type=Debug
 
-      - name: 📦 Create `RelWithDebInfo` package
-        run: conan create . -s build_type=RelWithDebInfo
+      # - name: 📦 Create `RelWithDebInfo` package
+      #   run: conan create . -s build_type=RelWithDebInfo
 
-      - name: 📦 Create `MinSizeRel` package
-        run: conan create . -s build_type=MinSizeRel
+      # - name: 📦 Create `MinSizeRel` package
+      #   run: conan create . -s build_type=MinSizeRel
 
-      - name: 📦 Create `Release` package
-        run: conan create . -s build_type=Release
+      # - name: 📦 Create `Release` package
+      #   run: conan create . -s build_type=Release
+      - name: Create Defauly Package
+        run: conan create . -b missing
       
       - name: 📡 Sign into JFrog Artifactory
         # if: ${{ inputs.version != '' }}
