@@ -1,48 +1,91 @@
 name: Engine3D Package Deployment
 
 on:
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      library:
+        type: string
+        default: ${{ github.event.repository.name }}
+      repo:
+        type: string
+        default: ${{ github.repository }}
+      conan_version:
+        type: string
+        default: "2.2.2"
+      version:
+        type: string
+        default: ""
+      compiler:
+        type: string
+        required: true
+      compiler_version:
+        type: string
+        required: true
+      compiler_package:
+        type: string
+        required: true
+      arch:
+        type: string
+        required: true
+      os:
+        type: string
+        required: true
+      external_package:
+        type: boolean
+        default: false
 
 jobs:
   deploy:
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/checkout@v4.1.1
+        if: ${{ inputs.version != '' && inputs.external_package == false}}
+        with:
+          submodules: true
+          repository: ${{ inputs.repo }}
+          ref: ${{ inputs.version }}
+
+      - uses: actions/checkout@v4.1.1
+        if: ${{ inputs.version == '' || inputs.external_package == true}}
+        with:
+          submodules: true
+          repository: ${{ inputs.repo }}
+
       - name: 📥 Install Conan ${{ inputs.conan_version }}
-        run: pip3 install conan
-      - name: 📡 Add `engnie3d` repo to conan remotes
+        run: pip3 install conan==${{ inputs.conan_version }}
+
+      - name: 📡 Add `engine3d-dev` repo to conan remotes
         run: conan remote add engine3d-dev
-          https://libengine3d.jfrog.io/artifactory/api/conan/engine3d-dev-conan
-      
+          https://libengnie3d.jfrog.io/artifactory/api/conan/engine3d-dev-conan
+
       - name: 📡 Create and setup default profile
         run: conan profile detect --force
 
       - name: 👁️‍🗨️ Show conan profile
         run: conan profile show
-        
+
       - name: 📡 Install linux default profiles
         run: conan config install -sf profiles/x86_64/linux/ -tf profiles https://github.com/engine3d-dev/conan-config.git
 
-      # - name: 📦 Create `Debug` package
-        # run: conan create . -s build_type=Debug
+      - name: 📦 Create `Debug` package for ${{ inputs.profile }}
+        run: conan create . -s build_type=Debug
 
-      # - name: 📦 Create `RelWithDebInfo` package
-      #   run: conan create . -s build_type=RelWithDebInfo
+      - name: 📦 Create `RelWithDebInfo` package for ${{ inputs.profile }}
+        run: conan create . -s build_type=RelWithDebInfo
 
-      # - name: 📦 Create `MinSizeRel` package
-      #   run: conan create . -s build_type=MinSizeRel
+      - name: 📦 Create `MinSizeRel` package for ${{ inputs.profile }}
+        run: conan create . -s build_type=MinSizeRel
 
-      # - name: 📦 Create `Release` package
-      #   run: conan create . -s build_type=Release
-      - name: Create Defauly Package
-        run: conan create . -b missing
-      
+      - name: 📦 Create `Release` package for ${{ inputs.profile }}
+        run: conan create . -s build_type=Release
+
       - name: 📡 Sign into JFrog Artifactory
-        # if: ${{ inputs.version != '' }}
+        if: ${{ inputs.version != '' }}
         env:
           PASSWORD: ${{ secrets.JFROG_ENGINE3D_TRUNKEN_ID_TOKEN }}
           JFROG_USER: ${{ secrets.JFROG_USERNAME }}
         run: conan remote login -p $PASSWORD engine3d-dev $JFROG_USER
-        
-      - name: 🆙 Upload package version ${{ inputs.version }} to `engine3d` repo
+
+      - name: 🆙 Upload package version ${{ inputs.version }} to `engine3d-dev` repo
         if: ${{ inputs.version != '' }}
         run: conan upload "${{ inputs.library }}/${{ inputs.version }}" --confirm -r=engine3d-dev
