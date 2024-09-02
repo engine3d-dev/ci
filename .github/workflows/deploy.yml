@@ -12,7 +12,6 @@ on:
       version:
         type: string
         default: ""
-  workflow_dispatch:
 
 jobs:
   deploy:
