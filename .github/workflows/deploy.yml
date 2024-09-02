@@ -12,6 +12,15 @@ on:
       version:
         type: string
         default: ""
+      compiler:
+        type: string
+        required: true
+      arch:
+        type: string
+        required: true
+      os:
+        type: string
+        required: true
 
 jobs:
   deploy:
