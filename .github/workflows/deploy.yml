@@ -1,4 +1,5 @@
-name: Engine3D Package Deployment
+
+name: Package 📦 + 🚀 Deploy
 
 on:
   workflow_call:
@@ -9,10 +10,19 @@ on:
       repo:
         type: string
         default: ${{ github.repository }}
+      conan_version:
+        type: string
+        default: "2.2.2"
       version:
         type: string
         default: ""
       compiler:
+        type: string
+        required: true
+      compiler_version:
+        type: string
+        required: true
+      compiler_package:
         type: string
         required: true
       arch:
@@ -21,26 +31,29 @@ on:
       os:
         type: string
         required: true
+      external_package:
+        type: boolean
+        default: false
 
 jobs:
   deploy:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4.1.1
+        if: ${{ inputs.version != '' && inputs.external_package == false}}
         with:
           submodules: true
           repository: ${{ inputs.repo }}
-          ref: ${{ inputs.repo }}
+          ref: ${{ inputs.version }}
 
       - uses: actions/checkout@v4.1.1
         if: ${{ inputs.version == '' || inputs.external_package == true}}
         with:
           submodules: true
           repository: ${{ inputs.repo }}
-      
-      # Setting to getting conan 2.2.2
-      - name: 📥 Install Conan "2.2.2"
-        run: pip3 install conan=="2.2.2"
+
+      - name: 📥 Install Conan ${{ inputs.conan_version }}
+        run: pip3 install conan==${{ inputs.conan_version }}
 
       - name: 📡 Add `engine3d-dev` repo to conan remotes
         run: conan remote add engine-conan https://libengine3d.jfrog.io/artifactory/api/conan/engine-conan
@@ -54,25 +67,49 @@ jobs:
       - name: 📡 Install linux default profiles
         run: conan config install -sf profiles/x86_64/linux/ -tf profiles https://github.com/engine3d-dev/conan-config.git
 
-      - name: 📦 Create `Debug` package for Debug
-        run: conan create . -s build_type=Debug
+      - name: Set Version Environment Variable
+        run: |
+          if [ -z "${{ inputs.version }}" ]; then
+            echo "VERSION=latest" >> $GITHUB_ENV
+          else
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+          fi
 
-      - name: 📦 Create `RelWithDebInfo` package for Release
-        run: conan create . -s build_type=RelWithDebInfo
+      - name: Create `deploy.profile`
+        run: |
+          echo "[settings]" > deploy.profile
+          echo "arch=${{ inputs.arch }}" >> deploy.profile
+          echo "compiler=${{ inputs.compiler }}" >> deploy.profile
+          echo "compiler.version=${{ inputs.compiler_version }}" >> deploy.profile
+          echo "compiler.libcxx=libstdc++11" >> deploy.profile
+          echo "compiler.cppstd=23" >> deploy.profile
+          echo "os=${{ inputs.os }}" >> deploy.profile
 
-      - name: 📦 Create `MinSizeRel` package for MinSizeRel
-        run: conan create . -s build_type=MinSizeRel
+      - name: Add compiler to `deploy.profile` [tool_requires] section
+        if: ${{ inputs.compiler_package != '' }}
+        run: |
+          echo "[tool_requires]" >> deploy.profile
+          echo "${{ inputs.compiler_package }}/${{ inputs.compiler_version }}" >> deploy.profile
 
-      - name: 📦 Create `Release` package for Release
-        run: conan create . -s build_type=Release
+      - name: 📦 Create `Debug` package for ${{ inputs.profile }}
+        run: conan create . -s build_type=Debug -pr deploy.profile --version=${{ env.VERSION }}
+
+      - name: 📦 Create `RelWithDebInfo` package for ${{ inputs.profile }}
+        run: conan create . -s build_type=RelWithDebInfo -pr deploy.profile --version=${{ env.VERSION }}
+
+      - name: 📦 Create `MinSizeRel` package for ${{ inputs.profile }}
+        run: conan create . -s build_type=MinSizeRel -pr deploy.profile --version=${{ env.VERSION }}
+
+      - name: 📦 Create `Release` package for ${{ inputs.profile }}
+        run: conan create . -s build_type=Release -pr deploy.profile --version=${{ env.VERSION }}
 
       - name: 📡 Sign into JFrog Artifactory
         if: ${{ inputs.version != '' }}
         env:
           PASSWORD: ${{ secrets.JFROG_ENGINE3D_TRUNKEN_ID_TOKEN }}
-          JFROG_USER: ${{ secrets.JFROG_USERNAME }}
-        run: conan remote login -p $PASSWORD engine3d-dev $JFROG_USER
+          JFROG_USER: ${{ secrets.JFROG_USERNAME  }}
+        run: conan remote login -p $PASSWORD engine-conan $JFROG_USER
 
       - name: 🆙 Upload package version ${{ inputs.version }} to `engine3d-dev` repo
         if: ${{ inputs.version != '' }}
-        run: conan upload "${{ inputs.library }}/${{ inputs.version }}" --confirm -r=engine3d-dev
+        run: conan upload "${{ inputs.library }}/${{ inputs.version }}" --confirm -r=engine-conan
