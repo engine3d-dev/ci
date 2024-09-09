@@ -43,7 +43,7 @@ jobs:
         run: pip install conan==${{ inputs.conan_version }}
           
       - name: Adding the engine3d repository to conan remotes
-        run: conan remote add https://libengine3d.jfrog.io/artifactory/api/conan/engine-conan
+        run: conan remote add engine-conan https://libengine3d.jfrog.io/artifactory/api/conan/engine-conan
 
       - name: Creating and setup default conan profile
         run: conan profile detect --force
