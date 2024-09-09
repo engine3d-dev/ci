@@ -16,100 +16,66 @@ on:
       version:
         type: string
         default: ""
-      compiler:
-        type: string
-        required: true
-      compiler_version:
-        type: string
-        required: true
-      compiler_package:
-        type: string
-        required: true
       arch:
         type: string
         required: true
       os:
         type: string
         required: true
-      external_package:
-        type: boolean
-        default: false
 
 jobs:
   deploy:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4.1.1
-        if: ${{ inputs.version != '' && inputs.external_package == false}}
+        if: ${{ inputs.version != '' }}
         with:
-          submodules: true
+          submodule: true
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.version }}
-
       - uses: actions/checkout@v4.1.1
-        if: ${{ inputs.version == '' || inputs.external_package == true}}
+        if: ${{ inputs.version == '' }}
         with:
-          submodules: true
+          submodule: true
           repository: ${{ inputs.repo }}
 
-      - name: 📥 Install Conan ${{ inputs.conan_version }}
-        run: pip3 install conan==${{ inputs.conan_version }}
+      - name: Installing Conan ${{ inputs.conan_version }}
+        run: pip install conan==${{ inputs.conan_version }}
+          
+      - name: Adding the engine3d repository to conan remotes
+        run: conan remote add engine-conan
 
-      - name: 📡 Add `engine3d-dev` repo to conan remotes
-        run: conan remote add engine-conan https://libengine3d.jfrog.io/artifactory/api/conan/engine-conan
-
-      - name: 📡 Create and setup default profile
+      - name: Creating and setup default conan profile
         run: conan profile detect --force
 
-      - name: 👁️‍🗨️ Show conan profile
+      - name: Show conan profile
         run: conan profile show
 
-      - name: 📡 Install linux default profiles
+      - name: Install linux default profiles
         run: conan config install -sf profiles/x86_64/linux/ -tf profiles https://github.com/engine3d-dev/conan-config.git
 
-      - name: Set Version Environment Variable
-        run: |
-          if [ -z "${{ inputs.version }}" ]; then
-            echo "VERSION=latest" >> $GITHUB_ENV
-          else
-            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
-          fi
+      - name: Create Debug build of the package
+        run: conan create . -s build_type=Debug --version=${{ inputs.version }}
 
-      - name: Create `deploy.profile`
-        run: |
-          echo "[settings]" > deploy.profile
-          echo "arch=${{ inputs.arch }}" >> deploy.profile
-          echo "compiler=${{ inputs.compiler }}" >> deploy.profile
-          echo "compiler.version=${{ inputs.compiler_version }}" >> deploy.profile
-          echo "compiler.libcxx=libstdc++11" >> deploy.profile
-          echo "compiler.cppstd=23" >> deploy.profile
-          echo "os=${{ inputs.os }}" >> deploy.profile
+      - name: Creating `RelWithDebInfo` build for the package
+        run: conan create . -s build_type=RelWithDebInfo --version=${{ inputs.version }}
 
-      - name: Add compiler to `deploy.profile` [tool_requires] section
-        if: ${{ inputs.compiler_package != '' }}
-        run: |
-          echo "[tool_requires]" >> deploy.profile
-          echo "${{ inputs.compiler_package }}/${{ inputs.compiler_version }}" >> deploy.profile
+      - name: Creating `MinSizeRel` build for the package
+        run: conan create . -s build_type=MinSizeRel --version=${{ inputs.version }}
 
-      - name: 📦 Create `Debug` package for ${{ inputs.profile }}
-        run: conan create . -s build_type=Debug -pr deploy.profile --version=${{ env.VERSION }}
+      - name: Create `Release` build for the package
+        run: conan create . -s build_type=Release --version=${{ inputs.version }}
 
-      - name: 📦 Create `RelWithDebInfo` package for ${{ inputs.profile }}
-        run: conan create . -s build_type=RelWithDebInfo -pr deploy.profile --version=${{ env.VERSION }}
-
-      - name: 📦 Create `MinSizeRel` package for ${{ inputs.profile }}
-        run: conan create . -s build_type=MinSizeRel -pr deploy.profile --version=${{ env.VERSION }}
-
-      - name: 📦 Create `Release` package for ${{ inputs.profile }}
-        run: conan create . -s build_type=Release -pr deploy.profile --version=${{ env.VERSION }}
-
-      - name: 📡 Sign into JFrog Artifactory
+      - name: Signing into JFrog Artifactory
         if: ${{ inputs.version != '' }}
+
         env:
           PASSWORD: ${{ secrets.JFROG_ENGINE3D_TRUNKEN_ID_TOKEN }}
-          JFROG_USER: ${{ secrets.JFROG_USERNAME  }}
-        run: conan remote login -p $PASSWORD engine-conan $JFROG_USER
+          USERNAME: ${{ secrets.JFROG_USERNAME }}
+        run: conan remote login -p $PASSWORD engine-conan $USERNAME
 
-      - name: 🆙 Upload package version ${{ inputs.version }} to `engine3d-dev` repo
+      - name: Upload package version ${{ inputs.version }} to `engine3d` repo
         if: ${{ inputs.version != '' }}
-        run: conan upload "${{ inputs.library }}/${{ inputs.version }}" --confirm -r=engine-conan
+        run: conan upload "${{ inputs.library }}/${inputs.version}}"
+        
+        
