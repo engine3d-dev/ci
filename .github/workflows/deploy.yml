@@ -79,6 +79,6 @@ jobs:
 
       - name: Upload package version ${{ inputs.version }} to `engine3d` repo
         if: ${{ inputs.version != '' }}
-        run: conan upload "${{ inputs.library }}/${inputs.version}}" --confirm -r=engine-conan
+        run: conan upload "${{ inputs.library }}" --confirm -r=engine-conan
         
         
