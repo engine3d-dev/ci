@@ -73,7 +73,7 @@ jobs:
         env:
           PASSWORD: ${{ secrets.JFROG_ENGINE3D_TRUNKEN_ID_TOKEN }}
           USERNAME: ${{ secrets.JFROG_USERNAME }}
-          run: conan remote login -p $PASSWORD engine-conan $USERNAME
+        run: conan remote login -p $PASSWORD engine-conan $USERNAME
 
       - name: Upload package version ${{ inputs.library }} to `engine3d` repo
         # if: ${{ inputs.version != '' }}
