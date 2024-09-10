@@ -56,11 +56,6 @@ jobs:
 
       - name: Install linux default profiles
         run: conan config install -sf profiles/x86_64/linux/ -tf profiles https://github.com/engine3d-dev/conan-config.git
-    
-        env:
-          PASSWORD: ${{ secrets.JFROG_ENGINE3D_TRUNKEN_ID_TOKEN }}
-          USERNAME: ${{ secrets.JFROG_USERNAME }}
-          run: conan remote login -p $PASSWORD engine-conan $USERNAME
       
       - name: Create Debug build of the package
         run: conan create . -s build_type=Debug --version=${{ inputs.version }}
@@ -74,7 +69,13 @@ jobs:
       - name: Create `Release` build for the package
         run: conan create . -s build_type=Release --version=${{ inputs.version }}
 
+      - name: Signing into JFrog
+        env:
+          PASSWORD: ${{ secrets.JFROG_ENGINE3D_TRUNKEN_ID_TOKEN }}
+          USERNAME: ${{ secrets.JFROG_USERNAME }}
+          run: conan remote login -p $PASSWORD engine-conan $USERNAME
+
       - name: Upload package version ${{ inputs.library }} to `engine3d` repo
-        if: ${{ inputs.version != '' }}
+        # if: ${{ inputs.version != '' }}
         run: conan upload "${{ inputs.library }}" --confirm -r=engine-conan  
         
