@@ -46,7 +46,7 @@ jobs:
           vulkan-components: Vulkan-Headers, Vulkan-Loader
           vulkan-use-cache: true
       - name: Preparing lib1-mesa-dev because of some issues.
-        run: sudo apt install xorg-dev libgl1-mesa-dev clang
+        run: sudo apt install xorg-dev libgl1-mesa-dev libstdc++-12-dev
       
       - name: Installing Conan ${{ inputs.conan_version }}
         run: pip install conan
