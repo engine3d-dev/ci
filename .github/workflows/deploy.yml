@@ -47,7 +47,7 @@ jobs:
           vulkan-use-cache: true
       
       - name: Installing Conan ${{ inputs.conan_version }}
-        run: pip install conan==${{ inputs.conan_version }}
+        run: pip install conan
           
       - name: Adding the engine3d repository to conan remotes
         run: conan remote add engine-conan https://libengine.jfrog.io/artifactory/api/conan/engine-conan
