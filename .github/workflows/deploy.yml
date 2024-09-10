@@ -74,7 +74,7 @@ jobs:
       
       - name: Create Debug build of the package
         # run: conan create . -s build_type=Debug -c tools.system.package_manager:mode=install tools.system.package_manager:sudo=True -b missing
-        run: conan create . -s build_type=Debug -c tools.system.package_manager:sudo=True -c tools.system.package_manager:mode=install -b missing
+        run: conan create . -c tools.system.package_manager:sudo=True -c tools.system.package_manager:mode=install -b missing
 
       # - name: Creating `RelWithDebInfo` build for the package
         # run: conan create . -s build_type=RelWithDebInfo -c tools.system.package_manager:mode=install tools.system.package_manager:sudo=True -b missing
