@@ -77,7 +77,7 @@ jobs:
           USERNAME: ${{ secrets.JFROG_USERNAME }}
         run: conan remote login -p $PASSWORD engine-conan $USERNAME
 
-      - name: Upload package version ${{ inputs.version }} to `engine3d` repo
+      - name: Upload package version ${{ inputs.library }} to `engine3d` repo
         if: ${{ inputs.version != '' }}
         run: conan upload "${{ inputs.library }}" --confirm -r=engine-conan
         
