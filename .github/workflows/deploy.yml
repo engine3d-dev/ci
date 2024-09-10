@@ -39,6 +39,9 @@ jobs:
           submodule: true
           repository: ${{ inputs.repo }}
 
+      - name: Installing vulkan
+        run: sudo apt install vulkan-sdk
+      
       - name: Installing Conan ${{ inputs.conan_version }}
         run: pip install conan==${{ inputs.conan_version }}
           
