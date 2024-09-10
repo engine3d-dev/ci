@@ -70,16 +70,16 @@ jobs:
         run: conan remote login -p $PASSWORD engine-conan $USERNAME
       
       - name: Create Debug build of the package
-        run: conan create . -s build_type=Debug -c tools.system.package_manager:mode=install tools.system.package_manager:sudo=Tru -b missing
+        run: conan create . -s build_type=Debug -c tools.system.package_manager:mode=install tools.system.package_manager:sudo=True -b missing
 
       - name: Creating `RelWithDebInfo` build for the package
-        run: conan create . -s build_type=RelWithDebInfo -c tools.system.package_manager:mode=install tools.system.package_manager:sudo=Tru -b missing
+        run: conan create . -s build_type=RelWithDebInfo -c tools.system.package_manager:mode=install tools.system.package_manager:sudo=True -b missing
 
       - name: Creating `MinSizeRel` build for the package
-        run: conan create . -s build_type=MinSizeRel -c tools.system.package_manager:mode=install tools.system.package_manager:sudo=Tru -b missing
+        run: conan create . -s build_type=MinSizeRel -c tools.system.package_manager:mode=install tools.system.package_manager:sudo=True -b missing
 
       - name: Create `Release` build for the package
-        run: conan create . -s build_type=Release -c tools.system.package_manager:mode=install tools.system.package_manager:sudo=Tru -b missing
+        run: conan create . -s build_type=Release -c tools.system.package_manager:mode=install tools.system.package_manager:sudo=True -b missing
 
       - name: Upload package version ${{ inputs.library }} to `engine3d` repo
         # if: ${{ inputs.version != '' }}
