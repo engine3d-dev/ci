@@ -64,16 +64,16 @@ jobs:
         run: conan remote login -p $PASSWORD engine-conan $USERNAME
       
       - name: Create Debug build of the package
-        run: conan create . -s build_type=Debug --version=${{ inputs.version }}
+        run: conan create . -s build_type=Debug -b missing
 
       - name: Creating `RelWithDebInfo` build for the package
-        run: conan create . -s build_type=RelWithDebInfo --version=${{ inputs.version }}
+        run: conan create . -s build_type=RelWithDebInfo -b missing
 
       - name: Creating `MinSizeRel` build for the package
-        run: conan create . -s build_type=MinSizeRel --version=${{ inputs.version }}
+        run: conan create . -s build_type=MinSizeRel -b missing
 
       - name: Create `Release` build for the package
-        run: conan create . -s build_type=Release --version=${{ inputs.version }}
+        run: conan create . -s build_type=Release -b missing
 
       - name: Upload package version ${{ inputs.library }} to `engine3d` repo
         # if: ${{ inputs.version != '' }}
