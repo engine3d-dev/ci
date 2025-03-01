@@ -7,10 +7,10 @@ on:
       inputs:
         library:
           type: string
-          default: ${{ github.event.repository.name }}
+          default: https://github.com/engine3d-dev/TheAtlasEngine
         repo:
           type: string
-          default: ${{ github.repository }}
+          default: https://github.com/engine3d-dev/TheAtlasEngine
         conan_version:
           type: string
           default: "2.6.0"
