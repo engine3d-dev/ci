@@ -1,0 +1,58 @@
+name: lint
+
+jobs:
+  lint:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4.1.1
+        if: ${{ inputs.version != '' }}
+        with:
+          submodules: true
+          repository: ${{ inputs.repo }}
+          ref: ${{ inputs.version }}
+
+      - uses: actions/checkout@v4.1.1
+        if: ${{ inputs.version == '' }}
+        with:
+          submodules: true
+          repository: ${{ inputs.repo }}
+
+      - name: 📥 Install libclang-11-dev (for name style check)
+        shell: bash
+        run: sudo apt install libclang-11-dev
+
+      - name: 🌐 Downloading .clang-format from TheAtlasEngine
+        run: wget https://raw.githubusercontent.com/engine3d-dev/TheAtlasEngine/tree/dev/.clang-format -O .clang-format
+
+      - name: 🧹 Format Check `atlas/` directory
+        uses: jidicula/clang-format-action@v4.11.0
+        if: always()
+        with:
+          clang-format-version: "18"
+          check-path: ./atlas
+          exclude-regex: ".*/third_party/.*"
+
+      - name: 🧹 Format Check `src/atlas/` directory
+        uses: jidicula/clang-format-action@v4.11.0
+        if: ${{ hashFiles(src/atlas) != '' }}
+        with:
+          clang-format-version: "18"
+          check-path: ${{ inputs.source_dir }}
+          exclude-regex: ".*/third_party/.*"
+
+      # checks tests directory with linter
+      - name: 🧹 Format Check `tests/` directory
+        uses: jidicula/clang-format-action@v4.11.0
+        if: ${{ hashFiles('./tests/') != '' }}
+        with:
+          clang-format-version: "18"
+          check-path: ./tests/
+          exclude-regex: ".*/third_party/.*"
+        
+      - name: 🧹 Format Check `test/` code
+        uses: jidicula/clang-format-action@v4.11.0
+        if: always()
+        with:
+          clang-format-version: "18"
+          check-path: ./tests
+          exclude-regex: ".*/third_party/.*"

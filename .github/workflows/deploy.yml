@@ -1,98 +1,69 @@
 
 name: Package 📦 + 🚀 Deploy
 
-on:
-  workflow_call:
-    inputs:
-      library:
-        type: string
-        default: ${{ github.event.repository.name }}
-      repo:
-        type: string
-        default: ${{ github.repository }}
-      conan_version:
-        type: string
-        default: "2.6.0"
-      version:
-        type: string
-        default: ""
-      arch:
-        type: string
-        required: true
-      os:
-        type: string
-        required: true
-
 jobs:
   deploy:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4.1.1
-        if: ${{ inputs.version != '' }}
         with:
-          submodule: true
-          repository: ${{ inputs.repo }}
-          ref: ${{ inputs.version }}
+          submodules: true
+          repository: https://github.com/engine3d-dev/TheAtlasEngine
+          ref: 1.0
+
       - uses: actions/checkout@v4.1.1
-        if: ${{ inputs.version == '' }}
+        # if: ${{ inputs.version == '' || inputs.external_package == true}}
         with:
-          submodule: true
-          repository: ${{ inputs.repo }}
-
-      - name: Preparing vulkan
-        uses: humbletim/setup-vulkan-sdk@v1.2.0
-        with:
-          vulkan-query-version: 1.3.204.0
-          vulkan-components: Vulkan-Headers, Vulkan-Loader
-          vulkan-use-cache: true
+          submodules: true
+          repository: https://github.com/engine3d-dev/TheAtlasEngine
       
-      - name: Preparing lib1-mesa-dev because of some issues.
-        run: sudo apt install libc6-dev libstdc++-12-dev xorg-dev libgl1-mesa-dev
+      - name: 📥 Install OS Specific Tools
+        run: |
+          sudo apt remove clang-tidy
+          sudo rm -f /usr/bin/clang-tidy
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 17
+          sudo apt install libc++-17-dev libc++abi-17-dev
+          sudo apt-get install pipx
+          pipx ensurepath
+          sudo apt install clang-tidy-17
 
-      - name: Preparing LLVM
-        run: wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && sudo ./llvm.sh 18 all
+      - name: 📥 Install Conan 2.2.0
+        run: pipx install conan==2.2.0
 
-      - name: Installing Clang
-        run: sudo apt-get install clang-17 clang++-17
-      
-      - name: Installing Conan ${{ inputs.conan_version }}
-        run: pip install conan
-          
-      - name: Adding the engine3d repository to conan remotes
-        run: conan remote add engine-conan https://libengine.jfrog.io/artifactory/api/conan/engine-conan
+      - name: 📡 Add `libhal` repo to conan remotes
+        run: conan remote add engine3d-conan
+             https://libhal.jfrog.io/artifactory/api/conan/engine3d-conan
 
-      - name: Creating and setup default conan profile
+      - name: 📡 Create and setup default profile
         run: conan profile detect --force
 
-      - name: Show conan profile
+      - name: 👁️‍🗨️ Show conan profile
         run: conan profile show
 
-      - name: Install linux default profiles
+      - name: 📡 Install linux default profiles
         run: conan config install -sf profiles/x86_64/linux/ -tf profiles https://github.com/engine3d-dev/conan-config.git
 
-      - name: Signing into JFrog
-        env:
-          PASSWORD: ${{ secrets.JFROG_ENGINE3D_TRUNKEN_ID_TOKEN }}
-          USERNAME: ${{ secrets.JFROG_USERNAME }}
-        run: conan remote login -p $PASSWORD engine-conan $USERNAME
-      
-      - name: Create Debug build of the package
-        # run: conan create . -s build_type=Debug -c tools.system.package_manager:mode=install tools.system.package_manager:sudo=True -b missing
-        run: conan create . -b missing
+      # - name: Set Version Environment Variable
+      #   run: |
+      #     if [ -z "${{ inputs.version }}" ]; then
+      #       echo "VERSION=latest" >> $GITHUB_ENV
+      #     else
+      #       echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+      #     fi
 
-      # - name: Creating `RelWithDebInfo` build for the package
-        # run: conan create . -s build_type=RelWithDebInfo -c tools.system.package_manager:mode=install tools.system.package_manager:sudo=True -b missing
-        # run: conan create . -s build_type=RelWithDebInfo -c tools.system.package_manager:sudo=True -b missing
+      - name: 📦 Create `Release` package for TheAtlasEngine
+        run: conan build . -b missing
 
-      # - name: Creating `MinSizeRel` build for the package
-        # run: conan create . -s build_type=MinSizeRel -c tools.system.package_manager:mode=install tools.system.package_manager:sudo=True -b missing
-        # run: conan create . -s build_type=MinSizeRel -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True -b missing
-
-      # - name: Create `Release` build for the package
-        # run: conan create . -s build_type=Release -c tools.system.package_manager:mode=install tools.system.package_manager:sudo=True -b missing
-        # run: conan create . -s build_type=Release -c tools.system.package_manager:sudo=True -b missing
-
-      - name: Upload package version ${{ inputs.library }} to `engine3d` repo
+      - name: 📡 Sign into JFrog Artifactory
         # if: ${{ inputs.version != '' }}
-        run: conan upload "${{ inputs.library }}" --confirm -r=engine-conan  
-        
+        env:
+          PASSWORD: ${{ secrets.JFROG_TRUNK_ID }}
+          JFROG_USER: ${{ secrets.JFROG_USER }}
+        run: conan remote login -p $PASSWORD libhal $JFROG_USER
+
+      - name: 🆙 Upload package version 1.0 to `TheAtlasEngine` repo
+        # if: ${{ inputs.version != '' }}
+        # TODO: This needs to change eventually to work with the input version from the CI.
+        run: conan upload "atlas/1.0" --confirm -r=engine3d-conan
