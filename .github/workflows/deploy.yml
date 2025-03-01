@@ -1,6 +1,28 @@
 
 name: Package 📦 + 🚀 Deploy
 
+on:
+  workflow_call:
+    inputs:
+      library:
+        type: string
+        default: ${{ github.event.repository.name }}
+      repo:
+        type: string
+        default: ${{ github.repository }}
+      conan_version:
+        type: string
+        default: "2.6.0"
+      version:
+        type: string
+        default: ""
+      arch:
+        type: string
+        required: true
+      os:
+        type: string
+        required: true
+
 jobs:
   deploy:
     runs-on: ubuntu-24.04
