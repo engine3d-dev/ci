@@ -38,7 +38,7 @@ jobs:
         # if: ${{ inputs.version == '' || inputs.external_package == true}}
         with:
           submodules: true
-          repository: https://github.com/engine3d-dev/TheAtlasEngine
+          repository: engine3d-dev/TheAtlasEngine
       
       - name: 📥 Install OS Specific Tools
         run: |
