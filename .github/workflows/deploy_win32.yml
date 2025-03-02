@@ -1,5 +1,5 @@
 
-name: Package 📦 + 🚀 Deploy
+name: Package 📦 + 🚀 Deploy Windows
 
 on:
   workflow_dispatch:
