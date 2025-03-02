@@ -1,66 +1,73 @@
-
-name: Package 📦 + 🚀 Deploy Windows
+name: Package 📦 + 🚀 Deploy
 
 on:
-  workflow_dispatch:
-    workflow_call:
-      inputs:
-        library:
-          type: string
-          default: engine3d-dev/TheAtlasEngine
-        repo:
-          type: string
-          default: engine3d-dev/TheAtlasEngine
-        conan_version:
-          type: string
-          default: "2.6.0"
-        version:
-          type: string
-          default: ""
-        arch:
-          type: string
-          required: true
-        os:
-          type: string
-          required: true
+  workflow_call:
+    inputs:
+      library:
+        type: string
+        default: ${{ github.event.repository.name }}
+      repo:
+        type: string
+        default: ${{ github.repository }}
+      conan_version:
+        type: string
+        default: "2.10.1"
+      version:
+        type: string
+        default: ""
+      compiler:
+        type: string
+        required: true
+      compiler_version:
+        type: string
+        required: true
+      compiler_package:
+        type: string
+        required: true
+      arch:
+        type: string
+        required: true
+      os:
+        type: string
+        required: true
+      external_package:
+        type: boolean
+        default: false
 
 jobs:
   deploy:
-    runs-on: windows-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4.1.1
+        if: ${{ inputs.version != '' && inputs.external_package == false}}
         with:
           submodules: true
-          repository: engine3d-dev/TheAtlasEngine
-          ref: 1.0
+          repository: ${{ inputs.repo }}
+          ref: ${{ inputs.version }}
 
       - uses: actions/checkout@v4.1.1
-        # if: ${{ inputs.version == '' || inputs.external_package == true}}
+        if: ${{ inputs.version == '' || inputs.external_package == true}}
         with:
           submodules: true
-          repository: engine3d-dev/TheAtlasEngine
-      
+          repository: ${{ inputs.repo }}
+
       - name: 📥 Install OS Specific Tools
         run: |
           winget install Microsoft.VisualStudio.2022.BuildTools --override "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended -p --installWhileDownloading"
           Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
           choco install git
-          git --version
           choco install python --version=3.12.0
           choco install llvm
           pip install "conan>=2.10.2"
-
-          choco install make cmake
-          choco install mingw
+          choco install make cmake mingw
           winget install --id=KhronosGroup.VulkanSDK -e
-          
 
-      - name: 📥 Install Conan 2.2.0
-        run: pipx install conan==2.2.0
+      - name: 📥 Install Conan ${{ inputs.conan_version }}
+        run: pipx install conan==${{ inputs.conan_version }}
 
       - name: 📡 Add `libhal` repo to conan remotes
         run: conan remote add engine3d-conan
-             https://libhal.jfrog.io/artifactory/api/conan/engine3d-conan
+          https://libhal.jfrog.io/artifactory/api/conan/engine3d-conan
 
       - name: 📡 Create and setup default profile
         run: conan profile detect --force
@@ -68,28 +75,27 @@ jobs:
       - name: 👁️‍🗨️ Show conan profile
         run: conan profile show
 
-      - name: 📡 Install Windows default profiles
+      - name: 📡 Install linux default profiles
         run: conan config install -sf profiles/x86_64/Windows/ -tf profiles https://github.com/engine3d-dev/conan-config.git
 
-      # - name: Set Version Environment Variable
-      #   run: |
-      #     if [ -z "1.0" ]; then
-      #       echo "VERSION=latest" >> $GITHUB_ENV
-      #     else
-      #       echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
-      #     fi
+      - name: Set Version Environment Variable
+        run: |
+          if [ -z "${{ inputs.version }}" ]; then
+            echo "VERSION=latest" >> $GITHUB_ENV
+          else
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+          fi
 
-      - name: 📦 Create `Release` package for TheAtlasEngine
+      - name: 📦 Create `Release` package for ${{ inputs.profile }}
         run: conan build . -b missing
 
       - name: 📡 Sign into JFrog Artifactory
-        # if: ${{ inputs.version != '' }}
+        if: ${{ inputs.version != '' }}
         env:
           PASSWORD: ${{ secrets.JFROG_TRUNK_ID }}
           JFROG_USER: ${{ secrets.JFROG_USER }}
         run: conan remote login -p $PASSWORD libhal $JFROG_USER
 
-      - name: 🆙 Upload package version 1.0 to `TheAtlasEngine` repo
-        # if: ${{ inputs.version != '' }}
-        # TODO: This needs to change eventually to work with the input version from the CI.
-        run: conan upload "atlas/1.0" --confirm -r=engine3d-conan
+      - name: 🆙 Upload package version ${{ inputs.version }} to `libhal` repo
+        if: ${{ inputs.version != '' }}
+        run: conan upload "${{ inputs.library }}/${{ inputs.version }}" --confirm -r=engine3d-conan
