@@ -7,10 +7,10 @@ on:
       inputs:
         library:
           type: string
-          default: https://github.com/engine3d-dev/TheAtlasEngine
+          default: engine3d-dev/TheAtlasEngine
         repo:
           type: string
-          default: ${{ github.repository }}
+          default: engine3d-dev/TheAtlasEngine
         conan_version:
           type: string
           default: "2.6.0"
@@ -31,26 +31,28 @@ jobs:
       - uses: actions/checkout@v4.1.1
         with:
           submodules: true
-          repository: https://github.com/engine3d-dev/TheAtlasEngine
+          repository: engine3d-dev/TheAtlasEngine
           ref: 1.0
 
       - uses: actions/checkout@v4.1.1
         # if: ${{ inputs.version == '' || inputs.external_package == true}}
         with:
           submodules: true
-          repository: https://github.com/engine3d-dev/TheAtlasEngine
+          repository: engine3d-dev/TheAtlasEngine
       
       - name: 📥 Install OS Specific Tools
         run: |
-          sudo apt remove clang-tidy
-          sudo rm -f /usr/bin/clang-tidy
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 17
-          sudo apt install libc++-17-dev libc++abi-17-dev
-          sudo apt-get install pipx
-          pipx ensurepath
-          sudo apt install clang-tidy-17
+          winget install Microsoft.VisualStudio.2022.BuildTools --override "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended -p --installWhileDownloading"
+          Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+          choco install git
+          choco install python --version=3.12.0
+          choco install llvm
+          pip install "conan>=2.10.2"
+
+          choco install make cmake
+          choco install mingw
+          winget install --id=KhronosGroup.VulkanSDK -e
+          
 
       - name: 📥 Install Conan 2.2.0
         run: pipx install conan==2.2.0
@@ -65,12 +67,12 @@ jobs:
       - name: 👁️‍🗨️ Show conan profile
         run: conan profile show
 
-      - name: 📡 Install linux default profiles
-        run: conan config install -sf profiles/x86_64/linux/ -tf profiles https://github.com/engine3d-dev/conan-config.git
+      - name: 📡 Install Windows default profiles
+        run: conan config install -sf profiles/x86_64/Windows/ -tf profiles https://github.com/engine3d-dev/conan-config.git
 
       # - name: Set Version Environment Variable
       #   run: |
-      #     if [ -z "${{ inputs.version }}" ]; then
+      #     if [ -z "1.0" ]; then
       #       echo "VERSION=latest" >> $GITHUB_ENV
       #     else
       #       echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
