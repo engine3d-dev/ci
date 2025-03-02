@@ -70,13 +70,13 @@ jobs:
       - name: 📡 Install linux default profiles
         run: conan config install -sf profiles/x86_64/linux/ -tf profiles https://github.com/engine3d-dev/conan-config.git
 
-      # - name: Set Version Environment Variable
-      #   run: |
-      #     if [ -z "${{ inputs.version }}" ]; then
-      #       echo "VERSION=latest" >> $GITHUB_ENV
-      #     else
-      #       echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
-      #     fi
+      - name: Set Version Environment Variable
+        run: |
+          if [ -z "1.0" ]; then
+            echo "VERSION=latest" >> $GITHUB_ENV
+          else
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+          fi
 
       - name: 📦 Create `Release` package for TheAtlasEngine
         run: conan build . -b missing
