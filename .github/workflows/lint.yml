@@ -9,16 +9,6 @@ jobs:
     - name: 🚀 Checkout Repository
       uses: actions/checkout@v4
 
-    - name: 🌐 Downloading .clang-format
-      run: |
-        echo "wget https://raw.githubusercontent.com/engine3d-dev/${{ github.event.repository.name}}/main/.clang-format -O .clang-format"
-        wget https://raw.githubusercontent.com/engine3d-dev/${{ github.event.repository.name}}/main/.clang-format -O .clang-format
-    
-    - name: 🔍 Print clang-format version
-      run: |
-        clang-format --version
-        which clang-format
-
     - uses: actions/checkout@v4
     - name: Run clang-format style check for C/C++/Protobuf programs.
       uses: jidicula/clang-format-action@v4.14.0
