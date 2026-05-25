@@ -1,94 +1,23 @@
 
-name: Package 📦 + 🚀 Deploy
+name: 🚀 Deployment
 
+# Trigger deployment CI when PRs get merged to main (production branch)
 on:
-  workflow_dispatch:
-    workflow_call:
-      inputs:
-        library:
-          type: string
-          default: engine3d-dev/TheAtlasEngine
-        repo:
-          type: string
-          default: engine3d-dev/TheAtlasEngine
-        conan_version:
-          type: string
-          default: "2.6.0"
-        version:
-          type: string
-          default: ""
-        arch:
-          type: string
-          required: true
-        os:
-          type: string
-          required: true
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+  workflow_call:
 
 jobs:
-  deploy:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4.1.1
-        with:
-          submodules: true
-          repository: engine3d-dev/TheAtlasEngine
-          ref: 1.0
+  windows:
+    uses: ./.github/workflows/deploy_windows.yml
+    secrets: inherit
 
-      - uses: actions/checkout@v4.1.1
-        # if: ${{ inputs.version == '' || inputs.external_package == true}}
-        with:
-          submodules: true
-          repository: engine3d-dev/TheAtlasEngine
-      
-      - name: 📥 Install OS Specific Tools
-        run: |
-          sudo apt remove clang-tidy
-          sudo rm -f /usr/bin/clang-tidy
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 17
-          sudo apt install libc++-17-dev libc++abi-17-dev git
-          sudo apt-get install pipx
-          pipx ensurepath
-          sudo apt install clang-tidy-17
+  linux:
+    uses: ./.github/workflows/deploy_linux.yml
+    secrets: inherit
 
-          
-
-      - name: 📥 Install Conan 2.2.0
-        run: pipx install conan==2.2.0
-
-      - name: 📡 Add `libhal` repo to conan remotes
-        run: conan remote add engine3d-conan
-             https://libhal.jfrog.io/artifactory/api/conan/engine3d-conan
-
-      - name: 📡 Create and setup default profile
-        run: conan profile detect --force
-
-      - name: 👁️‍🗨️ Show conan profile
-        run: conan profile show
-
-      - name: 📡 Install linux default profiles
-        run: conan config install -sf profiles/x86_64/linux/ -tf profiles https://github.com/engine3d-dev/conan-config.git
-
-      - name: Set Version Environment Variable
-        run: |
-          if [ -z "1.0" ]; then
-            echo "VERSION=latest" >> $GITHUB_ENV
-          else
-            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
-          fi
-
-      - name: 📦 Create `Release` package for TheAtlasEngine
-        run: conan build . -b missing
-
-      - name: 📡 Sign into JFrog Artifactory
-        # if: ${{ inputs.version != '' }}
-        env:
-          PASSWORD: ${{ secrets.JFROG_TRUNK_ID }}
-          JFROG_USER: ${{ secrets.JFROG_USER }}
-        run: conan remote login -p $PASSWORD libhal $JFROG_USER
-
-      - name: 🆙 Upload package version 1.0 to `TheAtlasEngine` repo
-        # if: ${{ inputs.version != '' }}
-        # TODO: This needs to change eventually to work with the input version from the CI.
-        run: conan upload "atlas/1.0" --confirm -r=engine3d-conan
+  mac-armv8:
+    uses: ./.github/workflows/deploy_mac.yml
+    secrets: inherit
