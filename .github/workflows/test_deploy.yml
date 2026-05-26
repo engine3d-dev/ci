@@ -26,6 +26,7 @@ jobs:
       - name: Conditional Build Step
         run: |
             echo "${{ inputs.repo}}"
+            echo "${{ inputs.version }}"
 
       - name: Run Tests
         if: ${{ inputs.version }}
