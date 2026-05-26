@@ -1,4 +1,4 @@
-name: MacOS Armv8 Deployment
+name: MacOS
 
 on:
   workflow_call:
@@ -14,7 +14,7 @@ on:
 
 
 jobs:
-  macos_armv8:
+  armv8:
     if: github.event.pull_request.merged == true
     runs-on: macos-latest
     steps:

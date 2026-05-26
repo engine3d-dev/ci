@@ -1,5 +1,4 @@
-name: Windows Deployment
-
+name: Windows
 
 on:
   workflow_call:
@@ -15,7 +14,7 @@ on:
 
 
 jobs:
-  windows_x86_64:
+  x86_64:
     if: github.event.pull_request.merged == true
     runs-on: windows-latest
     steps:
