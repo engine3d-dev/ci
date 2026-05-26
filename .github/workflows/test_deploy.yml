@@ -1,0 +1,38 @@
+name: Windows CI
+
+on:
+  workflow_call:
+    inputs:
+      repo:
+        description: 'Repository name'
+        required: true
+        type: string
+      version:
+        description: 'Package version'
+        required: true
+        type: string
+      enable_tests:
+        description: 'Whether to run tests for this repo'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log Target Repo Info
+        run: |
+          echo "Processing CI for repository type: ${{ inputs.repo }}"
+
+      - name: Conditional Build Step
+        run: |
+            echo "${{ inputs.repo}}"
+
+      - name: Run Tests
+        if: ${{ inputs.enable_tests }}
+        run: |
+          echo "Executing test suite..."
