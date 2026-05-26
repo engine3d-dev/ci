@@ -3,8 +3,8 @@ name: Ubuntu Deployment
 on:
   workflow_call:
     inputs:
-      repo:
-        description: 'Repo Name'
+      package_name:
+        description: 'Package Name'
         required: true
         type: string
       version:
@@ -53,22 +53,22 @@ jobs:
           conan config install https://github.com/engine3d-dev/conan-config.git
           conan atlas setup
 
-      - name: Creating Release build for vulkan-cpp 
+      - name: Creating Release build for ${{ inputs.package_name }}
         shell: pwsh
         run: conan atlas create . -s build_type=Release
       
-      - name: Creating Debug build for vulkan-cpp 
+      - name: Creating Debug build for ${{ inputs.package_name }}
         shell: pwsh
         run: conan atlas create . -s build_type=Debug
       
-      - name: Creating MinSizeRel build for vulkan-cpp
+      - name: Creating MinSizeRel build for ${{ inputs.package_name }}
         shell: pwsh
         run: conan atlas create . -s build_type=MinSizeRel
       
       - name: Login to JFrog
         run: conan remote login -p ${{ secrets.JFROG_USER_TOKEN_ID }} engine3d-conan ${{ secrets.JFROG_USERNAME }}
       
-      - name: Uploading vulkan-cpp to engine3d-conan remote repositories
+      - name: Uploading ${{ inputs.package_name }} to engine3d-conan remote repositories
         shell: pwsh
-        run: conan upload ${{ inputs.repo }}/${{ inputs.version }} --r=engine3d-conan --confirm
+        run: conan upload ${{ inputs.package_name }}/${{ inputs.version }} --r=engine3d-conan --confirm
 
