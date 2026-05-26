@@ -1,15 +1,19 @@
 name: Windows
 
 on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
   workflow_call:
     inputs:
       package_name:
-        description: 'Package Name'
+        description: "Package Name"
         required: true
         type: string
       version:
-        description: 'Package Version'
         required: true
+        description: "Package Version"
         type: string
 
 
