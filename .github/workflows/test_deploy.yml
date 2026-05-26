@@ -11,11 +11,6 @@ on:
         description: 'Package version'
         required: true
         type: string
-      enable_tests:
-        description: 'Whether to run tests for this repo'
-        required: false
-        default: true
-        type: boolean
 
 jobs:
   build:
@@ -33,6 +28,6 @@ jobs:
             echo "${{ inputs.repo}}"
 
       - name: Run Tests
-        if: ${{ inputs.enable_tests }}
+        if: ${{ inputs.version }}
         run: |
           echo "Executing test suite..."
