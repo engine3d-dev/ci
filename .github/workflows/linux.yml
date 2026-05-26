@@ -1,6 +1,14 @@
 name: Linux
 
-on: [workflow_call]
+on:
+  workflow_call:
+    inputs:
+      package_name:
+        description: 'Package Name'
+        type: string
+      version:
+        description: 'Package Version'
+        type: string
 
 jobs:
     ubuntu:
@@ -38,12 +46,12 @@ jobs:
                 conan config install https://github.com/engine3d-dev/conan-config.git
                 conan atlas setup
 
-            - name: Creating Release build for TheAtlasEngine
+            - name: Creating Release build for ${{inputs.package_name}}/${{inputs.version}}
               run: conan atlas create . -s build_type=Release
             
-            - name: Creating Debug build for TheAtlasEngine
+            - name: Creating Debug build for ${{inputs.package_name}}/${{inputs.version}}
               run: conan atlas create . -s build_type=Debug
             
-            - name: Creating MinSizeRel build for TheAtlasEngine
+            - name: Creating MinSizeRel build for ${{inputs.package_name}}/${{inputs.version}}
               run: conan atlas create . -s build_type=MinSizeRel
 
