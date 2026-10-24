@@ -19,8 +19,10 @@ jobs:
             - name: Install LLVM's C++ Standard Library
               run: sudo apt-get install libc++-20-dev libc++abi-20-dev
 
-            - name: Installing pipx
-              run: sudo apt install pipx
+            - name: Setup Python
+              uses: actions/setup-python@v5
+              with:
+                python-version: '3.x'
 
             - name: Installing Prerequisites for Linux
               run: |
