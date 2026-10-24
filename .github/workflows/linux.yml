@@ -16,9 +16,6 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - name: Install LLVM's C++ Standard Library
-              run: sudo apt-get install libc++-20-dev libc++abi-20-dev
-
             - name: Setup Python
               uses: actions/setup-python@v5
               with:
