@@ -19,7 +19,7 @@ jobs:
             - name: Installing Linux Prerequisites
               run: |
                   sudo apt-get update
-                  sudo apt install software-properties-common libxml2 -y
+                  sudo apt install software-properties-common -y
                   sudo add-apt-repository ppa:deadsnakes/ppa
 
             - name: Install LLVM's C++ STL
