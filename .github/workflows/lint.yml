@@ -1,12 +1,12 @@
 name: Cpp-Linter
 on:
-workflow_call:
-  inputs:
-    directory:
-      description: 'Directory to run linting on'
-      required: false
-      default: '.'
-      type: string
+  workflow_call:
+    inputs:
+      directory:
+        description: 'Directory to run linting on'
+        required: false
+        default: '.'
+        type: string
 
 jobs:
   linter:
