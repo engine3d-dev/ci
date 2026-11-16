@@ -22,6 +22,8 @@ jobs:
                   sudo apt install software-properties-common -y
                   sudo add-apt-repository ppa:deadsnakes/ppa
                   sudo apt-get install -y build-essential cmake ninja-build libxml2-dev
+                  # For compatibility with LLVM Toolchain. TODO: Should consider updating this actions in the future.
+                  sudo ln -s /usr/lib/x86_64-linux-gnu/libxml2.so.16 /usr/lib/x86_64-linux-gnu/libxml2.so.2
 
             - name: Install LLVM's C++ STL
               run: sudo apt-get install libc++-20-dev libc++abi-20-dev
