@@ -1,5 +1,13 @@
 name: Lint
-on: [workflow_call]
+# on: [workflow_call]
+on:
+workflow_call:
+  inputs:
+    directory:
+      description: 'Directory to run linting on'
+      required: false
+      default: '.'
+      type: string
 
 jobs:
   formatting-check:
@@ -20,5 +28,5 @@ jobs:
       uses: jidicula/clang-format-action@v4.14.0
       with:
         clang-format-version: 19
-        check-path: '.'
+        check-path: ${{inputs.directory}}
         fallback-style: 'LLVM' # optional
