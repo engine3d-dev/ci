@@ -16,6 +16,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         style: '' # Disables clang-format so it strictly runs clang-tidy
+        path: ${{ inputs.directory }}
         # tidy-checks: '.clang-tidy'
         extensions: 'cpp,cppm,h,hpp' # common C++ file extensions
         files-changed-only: true
